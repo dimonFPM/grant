@@ -6,14 +6,16 @@ import numba as nb
 from statistics import mean
 import matplotlib.pyplot as plt
 import requests as req
+
 from decimal import Decimal
+
 
 # x = 1
 # y = 1
-xx = []
-yy = []
-rez = []
-rez_all = []
+# xx = []
+# yy = []
+# rez = []
+# rez_all = []
 
 
 # @nb.njit(nopython=True, parallel=True)
@@ -56,21 +58,24 @@ def f2(nu: tuple = (0.1, 0.2, 0.3, 0.4)) -> None:
 
 
 @nb.njit(nopython=True, parallel=True)
-def f1(u=0.1, shag=0.01) -> (list, list, list, list):
+def f1(u=0.1, shag=0.001, start_y=0) -> (list, list, list, list):
+    print("----------------------------------------------------------------------------------------------" * 3)
     xx = []
     yy = []
     rez = []
     rez_all = []
-    for y in np.arange(0, 10 + shag, shag):
+    for y in np.arange(start_y, start_y + 20 + shag, shag):
         # y=Decimal(y)
+        # print(y)
         if y % 1 == 0:
             print(y)
-        for x in np.arange(0, 10 + shag, shag):
+        for x in np.arange(0, 20 + shag, shag):
             # x = Decimal(x)
+
             # region формула один
-            # r1 = (12 * m.sinh(x) * m.cosh(x) * (m.cos(y) * m.cos(y) - m.sin(y) * m.sin(y)) - 16 * 0.1 * m.sinh(
+            # r1 = (12 * m.sinh(x) * m.cosh(x) * (m.cos(y) * m.cos(y) - m.sin(y) * m.sin(y)) - 16 * u * m.sinh(
             #     x) * m.cosh(x) * (m.cos(y) * m.cos(y) - m.sin(y) * m.sin(y)) - 4 * x)
-            # r2 = (12 * m.cos(y) * m.sin(y) * (m.sinh(x) * m.sinh(x) + m.cosh(x) * m.cosh(x)) - 16 * 0.1 * m.cos(
+            # r2 = (12 * m.cos(y) * m.sin(y) * (m.sinh(x) * m.sinh(x) + m.cosh(x) * m.cosh(x)) - 16 * u * m.cos(
             #     y) * m.sin(y) * (m.sinh(x) * m.sinh(x) + m.cosh(x) * m.cosh(x)) - 4 * y)
             # # endregion
 
@@ -82,19 +87,23 @@ def f1(u=0.1, shag=0.01) -> (list, list, list, list):
                 y) * m.cos(y) + 8 * x * y)
             # endregion
 
+            # region формула два в Decimal
             # r1 = (6 + 12 * Decimal(m.sinh(x)) * Decimal(m.sinh(x)) * Decimal(m.cos(y)) * Decimal(m.cos(y)) - 12 * Decimal(m.cosh(x)) * Decimal(m.cosh(x)) * Decimal(m.sin(y)) * Decimal(m.sin(
             #     y)) - 8 * u - 16 * u * Decimal(m.sinh(x)) * Decimal(m.sinh(x)) * Decimal(m.cos(y)) * Decimal(m.cos(y)) + 16 * u * Decimal(m.cosh(x)) * Decimal(m.cosh(
             #     x)) * Decimal(m.sin(y)) * Decimal(m.sin(y)) + 4 * x * x - 4 * y * y + 2 - 2 * u + u * u)
             # r2 = (24 * Decimal(m.cosh(x)) * Decimal(m.sinh(x)) * Decimal(m.sin(y)) * Decimal(m.cos(y)) - 32 * u * Decimal(m.cosh(x)) * Decimal(m.sinh(x)) * Decimal(m.sin(
             #     y)) * Decimal(m.cos(y)) + 8 * x * y)
+            # end region
 
             r = m.sqrt(r1 ** 2 + r2 ** 2)
-            if -1 < r < 0.5:
+            if -1 < r < 1:
+                # if r == 0:
                 xx.append(x)
                 yy.append(y)
                 rez.append(r)
-            rez_all.append(r)
-    print("----------------------------------------------------------------------------------------------" * 4)
+            # rez_all.append(r)
+    rez_all.append(1)
+    print("----------------------------------------------------------------------------------------------" * 3)
     return xx, yy, rez, rez_all
 
 
@@ -179,17 +188,82 @@ def stat(rez_all: list, grath: bool = False, time=None, otc_check: bool = False)
     return None
 
 
-t = datetime.datetime.now()
-# f2()
-xx, yy, rez, rez_all = f1()
-t = datetime.datetime.now() - t
-print("time=", t)
-file_w(xx, yy, rez)
-print("len x=", len(xx), "  x=", xx)
-print("len y=", len(yy), "  y=", yy)
-print("len rez=", len(rez), "  rez=", rez)
-d = datetime.datetime.now()
-stat(rez_all, time=t)
-stat(rez, True)
-d = datetime.datetime.now() - d
-print("time=", d)
+def group(name_file: str, shag: float = 0.001):
+    l = []
+    ones = []
+    with open(name_file, "r") as file:
+        for i in file:
+            l.append(tuple(
+                map(float, (i.removesuffix("\n").replace("x=", "").replace("y=", "").replace("sqrt(r1 ** 2 + r2 ** 2)=",
+                                                                                             "").replace(" ", "").split(
+                    ",")))))
+    l = tuple(l)
+    print("len l=", len(l))
+    for i in range(len(l)):
+        if len(ones) == 0:
+            ones.append([l[i]])
+        else:
+            if (l[i][1] - ones[-1][-1][1]) <= shag * 2:
+                ones[-1].append(l[i])
+            else:
+                ones.append([l[i]])
+    print("len ones=", len(ones))
+    ones = [sorted(i, key=lambda l: l[2])[0] for i in ones]
+    print(ones)
+
+
+def main(i):
+    t = datetime.datetime.now()
+    xx, yy, rez, rez_all = f1(start_y=10 * i)
+    t = datetime.datetime.now() - t
+    print("time=", t)
+    file_w(xx, yy, rez)
+    print("len x=", len(xx), "  x=", xx)
+    print("len y=", len(yy), "  y=", yy)
+    print("len rez=", len(rez), "  rez=", rez)
+    stat(rez)
+    group("rezult.txt")
+    if len(rez) == 0:
+        return False, len(rez)
+    else:
+        return True, len(rez)
+
+
+# d = datetime.datetime.now()
+# # stat(rez_all, time=t, otc_check=True)
+# stat(rez, True)
+# d = datetime.datetime.now() - d
+# print("time=", d)
+
+if __name__ == '__main__':
+    group("rezult.txt")
+    # try:
+    #     check_null = []
+    #     for i in range(1):
+    #         b, r = main(i)
+    #         check_null.append((i * 10, b, r))
+    #     print(check_null)
+    #
+    #     # try:
+    #     #     token = "5226592225:AAGuyEtD_FOotorITU45tTNOLWhEcR2htVA"
+    #     #     r = req.get("https://api.telegram.org/bot" + token + "/sendMessage",
+    #     #                 params={"chat_id": 488216212, "text": "программа закончила работу"})
+    #     #     if r.status_code != 200:
+    #     #         print(r.status_code + "  Отчёт не отправлен")
+    #     #     else:
+    #     #         print("Отчёт отправлен")
+    #     # except:
+    #     #     print("Ошибка при отправке, проверте токен и чат ID")
+    # except Exception as error:
+    #     er = "Ошибка: " + str(error) + "  " + str(error.__traceback__.tb_frame)
+    #     print(er)
+    #     # try:
+    #     #     token = "5226592225:AAGuyEtD_FOotorITU45tTNOLWhEcR2htVA"
+    #     #     r = req.get("https://api.telegram.org/bot" + token + "/sendMessage",
+    #     #                 params={"chat_id": 488216212, "text": er})
+    #     #     if r.status_code != 200:
+    #     #         print(r.status_code + "  Отчёт не отправлен")
+    #     #     else:
+    #     #         print("Отчёт отправлен")
+    #     # except:
+    #     #     print("Ошибка при отправке, проверте токен и чат ID")
