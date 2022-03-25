@@ -1,4 +1,3 @@
-import cmath
 import math
 import numpy as np
 import numba as nb
@@ -39,7 +38,7 @@ def sigma(x: float, xi: float):
         logger.debug("ветка 3")
         return 0
 
-
+# @nb.njit(nopython=True, parallel=True)
 def finder(x, xi1, xi2):
     res = skobka(x, xi2)
     s1 = sigma(x, xi1)
@@ -91,7 +90,7 @@ def main():
             with open(f"result_{name}/resalt_xi1({xi1})_nu({nu})_shag({shag})_maxX({maxX}).txt", "w") as file:
                 if len(res_list) == len(res_x):
                     for i in range(len(res_list)):
-                        if res_list[i] < 1:
+                        if -1 < res_list[i] < 1:
                             file.write(f"x={'%.2f' % res_x[i]}    f(u)={'%.5f' % res_list[i]}\n")
                 else:
                     print("списки разной длины")
