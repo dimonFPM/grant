@@ -8,8 +8,10 @@ import datetime
 
 warnings.filterwarnings("ignore")
 # log1 = logger.add("log.log", level="DEBUG")
-logger.remove()
+# logger.remove()
 logger.debug("старт")
+
+sigma_list = []
 
 
 @nb.njit(nopython=True, parallel=True)
@@ -38,13 +40,24 @@ def sigma(x: float, xi: float):
         logger.debug("ветка 3")
         return 0
 
+
 # @nb.njit(nopython=True, parallel=True)
-def finder(x, xi1, xi2):
+def finder(x, xi1, xi2, ch):
+    global sigma_list
     res = skobka(x, xi2)
+    logger.debug(f"skobka={(x ** 2 - 0.5 * xi2) ** 2}")
     s1 = sigma(x, xi1)
+    logger.debug(f"s1={s1}")
     s2 = sigma(x, xi2)
-    return res * s1 * s2 * math.cosh(s1) * math.sinh(s2) - x ** 2 * math.sinh(s1) * math.cosh(
-        s2)  # пренести в отдельную функцию
+    sigma_list.append(("s1", s1))
+    sigma_list.append(("s2", s2))
+    logger.debug(f"s2={s2}")
+    logger.debug(f"t1={s1 * s2 * math.cosh(s1) * math.sinh(s2)}")
+    logger.debug((f"t2={x ** 2 * math.sinh(s1) * math.cosh(s2)}"))
+    if ch == 1:  # без мнимых единиц
+        return res * s1 * s2 * math.cosh(s1) * math.sinh(s2) - x ** 2 * math.sinh(s1) * math.cosh(s2)
+    elif ch == 2:  # с мнимой единицей
+        return res * s1 * s2 * math.cosh(s1) * math.sinh(s2) + x ** 2 * math.sinh(s1) * math.cosh(s2)
 
 
 def main():
@@ -53,8 +66,8 @@ def main():
 
     maxX = 10
     shag = 0.01
-    u = (0.1, 0.2, 0.3, 0.4)
-    xi1_list = (0.1, 0.5, 1, 2, 3, 4, 5)
+    u = (0.1,0.4)
+    xi1_list = (1,5)
     for i in xi1_list:
         xi1 = i
         for j in u:
@@ -68,13 +81,21 @@ def main():
             res_x = []
             res_list = []  # список вещественных значений уравнения
             for x in np.arange(0, maxX + shag, shag):
-                logger.debug(f"xi2={xi2}")
                 logger.debug(f"x={x}")
-                if (x ** 2 > xi1 and x ** 2 > xi2) or (x ** 2 < xi1 and x ** 2 < xi2):  # *1
-                    rez = finder(x, xi1, xi2)
+                logger.debug(f"x**2={x ** 2}")
+                logger.debug(f"nu={nu}")
+                logger.debug(f"xi1={xi1}")
+                logger.debug(f"xi2={xi2}")
+                if (x ** 2 > xi1 and x ** 2 > xi2):
+                    res = finder(x, xi1, xi2, 1)
                     res_x.append(x)
-                    res_list.append(rez)
-                    logger.debug(f"x**2={x ** 2}    {rez}\n")
+                    res_list.append(res)
+                    logger.debug(f"res={res}\n")
+                elif (x ** 2 < xi1 and x ** 2 < xi2):
+                    res = finder(x, xi1, xi2, 2)
+                    res_x.append(x)
+                    res_list.append(res)
+                    logger.debug(f"res={res}\n")
                 else:
                     logger.debug("мнимый корень\n")
                     col_mnim += 1
@@ -83,14 +104,15 @@ def main():
             for i in res_list:
                 if i.imag != 0:
                     col += 1
-            logger.debug(f"col-vo imag={col}")
-            logger.debug(len(res_list))
+            logger.debug(f"col-vo imag in res_list={col}")
+            logger.debug(f"len res_list={len(res_list)}")
             logger.debug(f"col_mnim={col_mnim}")
 
             with open(f"result_{name}/resalt_xi1({xi1})_nu({nu})_shag({shag})_maxX({maxX}).txt", "w") as file:
                 if len(res_list) == len(res_x):
                     for i in range(len(res_list)):
                         if -1 < res_list[i] < 1:
+                        # if True:
                             file.write(f"x={'%.2f' % res_x[i]}    f(u)={'%.5f' % res_list[i]}\n")
                 else:
                     print("списки разной длины")
@@ -98,3 +120,6 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+    sigma_list.sort(key=lambda x: x[1])
+    print(*sigma_list, sep="\n")
