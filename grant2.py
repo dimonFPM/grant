@@ -1,4 +1,6 @@
 import math
+
+import matplotlib.pyplot as plt
 import numpy as np
 import numba as nb
 from loguru import logger
@@ -8,8 +10,6 @@ import datetime
 
 warnings.filterwarnings("ignore")
 # log1 = logger.add("log.log", level="DEBUG")
-# logger.remove()
-logger.debug("старт")
 
 sigma_list = []
 
@@ -57,7 +57,8 @@ def finder(x, xi1, xi2, ch):
     if ch == 1:  # без мнимых единиц
         return res * s1 * s2 * math.cosh(s1) * math.sinh(s2) - x ** 2 * math.sinh(s1) * math.cosh(s2)
     elif ch == 2:  # с мнимой единицей
-        return res * s1 * s2 * math.cosh(s1) * math.sinh(s2) + x ** 2 * math.sinh(s1) * math.cosh(s2)
+        # return res * s1 * s2 * math.cosh(s1) * math.sinh(s2) + x ** 2 * math.sinh(s1) * math.cosh(s2)
+        return res * (-s1) * s2 * math.cosh(s1) * math.sin(s2) - x ** 2 * math.sinh(s1) * math.cos(s2)
 
 
 def main():
@@ -66,8 +67,10 @@ def main():
 
     maxX = 10
     shag = 0.01
-    u = (0.1,0.4)
-    xi1_list = (1,5)
+    u = (0.1, 0.2, 0.3, 0.4)
+    xi1_list = (0.1, 0.5, 1, 2, 3, 4, 5)
+    # u = (0.1,)
+    # xi1_list = (0.1,)
     for i in xi1_list:
         xi1 = i
         for j in u:
@@ -91,7 +94,7 @@ def main():
                     res_x.append(x)
                     res_list.append(res)
                     logger.debug(f"res={res}\n")
-                elif (x ** 2 < xi1 and x ** 2 < xi2):
+                elif (x ** 2 > xi1 and x ** 2 < xi2):
                     res = finder(x, xi1, xi2, 2)
                     res_x.append(x)
                     res_list.append(res)
@@ -111,15 +114,33 @@ def main():
             with open(f"result_{name}/resalt_xi1({xi1})_nu({nu})_shag({shag})_maxX({maxX}).txt", "w") as file:
                 if len(res_list) == len(res_x):
                     for i in range(len(res_list)):
-                        if -1 < res_list[i] < 1:
+                        # if -1 < res_list[i] < 1:
+                        if -0.5 < res_list[i] < 0.5:
+                        # if -0.1 < res_list[i] < 0.1:
                         # if True:
                             file.write(f"x={'%.2f' % res_x[i]}    f(u)={'%.5f' % res_list[i]}\n")
                 else:
                     print("списки разной длины")
 
+            fig = plt.figure(f"график nu={nu} xi1={xi1}")
+            xx = []
+            yy = []
+            for i in range(len(res_list)):
+                if -1 < res_list[i] < 1:
+                    xx.append(res_x[i])
+                    yy.append(res_list[i])
+            plt.grid()
+            plt.scatter(res_x, res_list, color="r", linewidths=0.5)
+            plt.scatter(xx, yy, color="g", linewidths=0.1)
+
 
 if __name__ == '__main__':
+    logger.remove()
+    logger.debug("старт")
+
     main()
 
-    sigma_list.sort(key=lambda x: x[1])
-    print(*sigma_list, sep="\n")
+    # sigma_list.sort(key=lambda x: x[1])
+    # print(*sigma_list, sep="\n")
+
+    plt.show()
