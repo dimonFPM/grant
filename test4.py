@@ -1,4 +1,8 @@
-c=complex(-3,-3)
-print(c)
-c=complex(abs(c.real),abs(c.imag))
-print(c)
+# c=complex(-3,-3)
+# print(c)
+# c=complex(abs(c.real),abs(c.imag))
+# print(c)
+
+
+x=8
+print(-x)

@@ -10,7 +10,6 @@ import os
 import datetime
 
 warnings.filterwarnings("ignore")
-# log1 = logger.add("log.log", level="DEBUG")
 
 sigma_list = []
 
@@ -102,7 +101,6 @@ def validate_nu():
 
 def group(res_x: list, res_list: list, change=0.01):
     l_list = []
-
     if len(res_list) == 0:
         print("Нет корней, список пустой")
         return None
@@ -116,8 +114,6 @@ def group(res_x: list, res_list: list, change=0.01):
             else:
                 l_list.append([])
                 l_list[-1].append([res_x[i], complex(abs(res_list[i].real), abs(res_list[i].imag))])
-    # print("сгруппированный список:")
-    # print(*l_list, sep="\n")
     return l_list
 
 
@@ -132,6 +128,7 @@ def main():
     os.mkdir(f"result_{name}/raw_data")
     os.mkdir(f"result_{name}/group_data")
 
+    okr = 0.5
     maxX = 10
     shag = 0.01
     # u = (0.3,)
@@ -174,14 +171,14 @@ def main():
             xxx_list = []
             yyy_list = []
 
+
             with open(f"result_{name}/raw_data/resalt_raw_xi1({xi1})_nu({nu})_shag({shag})_maxX({maxX}).txt",
                       "w") as file:
                 if len(res_list) == len(res_x):
                     for i in range(len(res_list)):
-                        # if (res_list[i].real == 0 and res_list[i].imag == 0):
                         # if True:
                         #     file.write(f"x={res_x[i]}    f(u)={res_list[i]}\n")
-                        if (-0.05 < res_list[i].imag < 0.05) and (-0.05 < res_list[i].real < 0.05):
+                        if (-okr < res_list[i].imag < okr) and (-okr < res_list[i].real < okr):
                             file.write(f"x={res_x[i]}    f(u)={res_list[i]}\n")
                             xxx_list.append(res_x[i])
                             yyy_list.append(res_list[i])
@@ -218,13 +215,13 @@ def main():
             with open(f"result_{name}/group_data/resalt_xi1({xi1})_nu({nu})_shag({shag})_maxX({maxX}).txt",
                       "w") as file:
                 for i in range(len(l1)):
-                    file.write(f"x={l1[i][0]}   f(x)={l1[i][1]}\n")
+                    file.write(f"x={'%.2f' % l1[i][0]}   f(x)={l1[i][1]}\n")
     return None
 
 
 if __name__ == '__main__':
     logger.remove()
-    log = logger.add("log.log", level="DEBUG", )
+    # log = logger.add("log.log", level="DEBUG", )
     # logger.remove()
 
     logger.debug("старт")
