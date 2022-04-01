@@ -109,7 +109,7 @@ def group(res_x: list, res_list: list, change=0.01):
             l_list.append([])
             l_list[-1].append([res_x[i], complex(abs(res_list[i].real), abs(res_list[i].imag))])
         else:
-            if float("%.2f" % (res_x[i] - l_list[-1][-1][0])) <= change:
+            if float("%.5f" % (res_x[i] - l_list[-1][-1][0])) <= change:
                 l_list[-1].append([res_x[i], complex(abs(res_list[i].real), abs(res_list[i].imag))])
             else:
                 l_list.append([])
@@ -127,7 +127,9 @@ def otchet_writer(name, shag, maxX, okr):
         # print(otc_text)
         with open(f"{name}/group_data/{i}", "r") as file:
             for j in file:
-                otc_text = otc_text + f"    {j}"
+                u2, fu2 = j.split()
+                # otc_text = otc_text + f"    {u2}  u={math.sqrt(float(u2.split('=')[1]))}  {fu2}\n"
+                otc_text = otc_text + f"    {u2}  u={math.sqrt(float(u2.split('=')[1]))}\n"
     with open(f"{name}/otchet.txt", "w") as file:
         file.write(otc_text)
 
@@ -145,7 +147,7 @@ def main():
 
     okr = 0.5
     maxX = 10
-    shag = 0.01
+    shag = 0.001
     # u = (0.3,)
     # xi1_list = (0.1,)
     u = (0.1, 0.2, 0.3, 0.4)
@@ -193,7 +195,7 @@ def main():
                         # if True:
                         #     file.write(f"x={res_x[i]}    f(u)={res_list[i]}\n")
                         if (-okr < res_list[i].imag < okr) and (-okr < res_list[i].real < okr):
-                            file.write(f"x={res_x[i]}    f(u)={res_list[i]}\n")
+                            file.write(f"u^2={res_x[i]}    f(u^2)={res_list[i]}\n")
                             xxx_list.append(res_x[i])
                             yyy_list.append(res_list[i])
                 else:
@@ -229,7 +231,7 @@ def main():
             with open(f"result_{name}/group_data/resalt_xi1({xi1})_nu({nu})_shag({shag})_maxX({maxX}).txt",
                       "w") as file:
                 for i in range(len(l1)):
-                    file.write(f"x={'%.2f' % l1[i][0]}   f(x)={l1[i][1]}\n")
+                    file.write(f"u^2={'%.5f' % l1[i][0]}   f(u^2)={l1[i][1]}\n")
     otchet_writer(f"result_{name}", shag, maxX, okr)
     return None
 
