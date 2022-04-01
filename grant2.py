@@ -117,6 +117,21 @@ def group(res_x: list, res_list: list, change=0.01):
     return l_list
 
 
+def otchet_writer(name, shag, maxX, okr):
+    name_list = os.listdir(f"{name}/group_data")
+    otc_text = f"Нули находились при: x=u^2, x от 0 до {maxX} с шагом {shag}. За ноль берутся значения функции от -{okr} до {okr}.\n"
+    for i in name_list:
+        xi1, nu = list(map(float, i.replace("resalt_xi1(", "").replace(")_nu(", " ").replace(")_shag(", " ").
+                           replace(")_maxX(", " ").replace(").txt", "").split()))[0:2]
+        otc_text = otc_text + f"При xi1={xi1} nu={nu}:\n"
+        # print(otc_text)
+        with open(f"{name}/group_data/{i}", "r") as file:
+            for j in file:
+                otc_text = otc_text + f"    {j}"
+    with open(f"{name}/otchet.txt", "w") as file:
+        file.write(otc_text)
+
+
 def main():
     # while True:
     #     u = validate_nu()
@@ -171,7 +186,6 @@ def main():
             xxx_list = []
             yyy_list = []
 
-
             with open(f"result_{name}/raw_data/resalt_raw_xi1({xi1})_nu({nu})_shag({shag})_maxX({maxX}).txt",
                       "w") as file:
                 if len(res_list) == len(res_x):
@@ -216,10 +230,12 @@ def main():
                       "w") as file:
                 for i in range(len(l1)):
                     file.write(f"x={'%.2f' % l1[i][0]}   f(x)={l1[i][1]}\n")
+    otchet_writer(f"result_{name}", shag, maxX, okr)
     return None
 
 
 if __name__ == '__main__':
+
     logger.remove()
     # log = logger.add("log.log", level="DEBUG", )
     # logger.remove()
