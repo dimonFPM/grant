@@ -8,6 +8,7 @@ import requests as req
 
 
 
+
 @nb.njit(nopython=True, parallel=True)
 def finder(u=0.1, shag=0.001, start_y=0) -> (list, list, list, list):
     p = "Поиск нулей"
