@@ -14,12 +14,12 @@ warnings.filterwarnings("ignore")
 sigma_list = []
 
 
-@nb.njit(nopython=True, parallel=True)
+@nb.njit(nopython=True, parallel=True, cache=True)
 def skobka(x: float, xi2: float) -> float or None:
     return (x - 0.5 * xi2) ** 2
 
 
-@nb.njit(nopython=True, parallel=True)
+@nb.njit(nopython=True, parallel=True,cache=True)
 def f_xi2(nu: float, xi1: float) -> float or None:
     if nu * 2 != 1:
         return ((2 * (1 - nu)) / (1 - (2 * nu))) * xi1
@@ -27,7 +27,7 @@ def f_xi2(nu: float, xi1: float) -> float or None:
         return None
 
 
-# @nb.njit(nopython=True, parallel=True)
+# @nb.njit(nopython=True, parallel=True,cache=True)
 def sigma(x: float, xi: float):
     if x > xi:
         logger.debug("ветка 1")
@@ -99,7 +99,7 @@ def validate_nu():
         return tuple(q)
 
 
-def group(res_x: list, res_list: list, change=0.01):
+def group(res_x: list, res_list: list, change=0.001):
     l_list = []
     if len(res_list) == 0:
         print("Нет корней, список пустой")

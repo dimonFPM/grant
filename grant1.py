@@ -4,8 +4,7 @@ import numpy as np
 import numba as nb
 import matplotlib.pyplot as plt
 import requests as req
-
-
+import os
 
 
 @nb.njit(nopython=True, parallel=True)
@@ -43,8 +42,8 @@ def finder(u=0.1, shag=0.001, start_y=0) -> (list, list, list, list):
     return xx, yy, rez
 
 
-def file_writer_all_rezalt(xx, yy, rez, name: str = "") -> str:
-    file_name = "rezult_" + name + ".txt"
+def file_writer_all_rezalt(xx, yy, rez, date_name: str, name: str = "") -> str:
+    file_name = f"result_{date_name}/raw_data/" + "rezult_raw_" + name + ".txt"
     with open(file_name, "w") as file:
         for i in range(len(xx)):
             file.write(f"x={xx[i]},  y={yy[i]},  sqrt(r1 ** 2 + r2 ** 2)={rez[i]}\n")
@@ -151,18 +150,38 @@ def group(name_file: str, changes: float):
     for i in ones:
         print(f"x = {'%.4f' % i[0]}   y = {'%.4f' % i[1]}   rez={'%.4f' % i[2]}")
 
+    return ones
+
 
 def main():
-    nu = (0.1, 0.2, 0.3, 0.4)
+    date_name = datetime.datetime.now().strftime("%d-%m-%Y_%H.%M.%S")
+    print(date_name)
+    os.mkdir(f"result_{date_name}")
+    os.mkdir(f"result_{date_name}/raw_data")
+    os.mkdir(f"result_{date_name}/group_data")
+
+    # nu = (0.1, 0.2, 0.3, 0.4)
+    nu = (0.1,)
+
     for u in nu:
         t = datetime.datetime.now()
         xx, yy, rez = finder(u=u)
+
+        ##########################
+        # res = rez[:]
+        # res.sort()
+        # print(res[:20])
+        ##########################
+
         t = datetime.datetime.now() - t
         print("Время поиска = ", t)
-        rezalt_file_name = file_writer_all_rezalt(xx, yy, rez, f"{u}")
+        rezalt_file_name = file_writer_all_rezalt(xx, yy, rez, date_name, f"{u}")
         stat(rez)
-        group(rezalt_file_name, 0.01)
-        # break
+        l = group(rezalt_file_name, 0.01)
+        with open(f"result_{date_name}/group_data/result_group_{u}.txt", "w") as file:
+            for i in l:
+                file.write(f"x = {'%.4f' % i[0]}   y = {'%.4f' % i[1]}   rez={'%.4f' % i[2]}\n")
+    # break
 
 
 if __name__ == '__main__':
