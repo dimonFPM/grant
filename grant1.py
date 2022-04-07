@@ -1,12 +1,11 @@
 import datetime
 import math as m
+import os
+
 import numpy as np
 import numba as nb
 import matplotlib.pyplot as plt
 import requests as req
-
-
-
 
 
 @nb.njit(nopython=True, parallel=True)
@@ -44,12 +43,27 @@ def finder(u=0.1, shag=0.001, start_y=0) -> (list, list, list, list):
     return xx, yy, rez
 
 
-def file_writer_all_rezalt(xx, yy, rez, name: str = "") -> str:
-    file_name = "rezult_" + name + ".txt"
+def file_writer_raw_rezalt(xx, yy, rez, name_tuple: tuple) -> str:
+    file_name = f"{name_tuple[0]}/raw_data/result_{name_tuple[1]}.txt"
     with open(file_name, "w") as file:
         for i in range(len(xx)):
             file.write(f"x={xx[i]},  y={yy[i]},  sqrt(r1 ** 2 + r2 ** 2)={rez[i]}\n")
     return file_name
+
+
+def file_writer_group_rezalt(res, name_tuple: tuple):
+    group_nomer = 1
+    for group in res:
+        # print("group")
+        # print(group)
+        # exit()
+        file_name = f"{name_tuple[0]}/group_data/result_{name_tuple[1]}_group_{group_nomer}.txt"
+        with open(file_name, "w") as file:
+            for i in group:
+                # for i in sorted(group, key=lambda x: x[2]):
+                file.write(f"{i}\n")
+            # file.write(f"x={xx[group_nomer]},  y={yy[group_nomer]},  sqrt(r1 ** 2 + r2 ** 2)={res[group_nomer]}\n")
+        group_nomer += 1
 
 
 def stat(rez_all: list, grath: bool = False, time=None, otc_check: bool = False) -> None:
@@ -128,41 +142,59 @@ def stat(rez_all: list, grath: bool = False, time=None, otc_check: bool = False)
 
 
 def group(name_file: str, changes: float):
+    col_vo_znakov = int(len(str(changes).split(".")[1]))
     l = []
     ones = []
     with open(name_file, "r") as file:
         for i in file:
             l.append(tuple(
-                map(float, (i.removesuffix("\n").replace("x=", "").replace("y=", "").replace("sqrt(r1 ** 2 + r2 ** 2)=",
-                                                                                             "").replace(" ", "").split(
-                    ",")))))
+                map(float,
+                    (i.removesuffix("\n").replace("x=", "").replace("y=", "").replace("sqrt(r1 ** 2 + r2 ** 2)=",
+                                                                                      "").replace(" ", "").split(
+                        ",")))))
     l = tuple(l)
     for i in range(len(l)):
         if len(ones) == 0:
             ones.append([l[i]])
         else:
-            if (l[i][1] - ones[-1][-1][1]) <= changes:
+            # if abs(float(f"%.{col_vo_znakov}f" % (l[i][0] - ones[-1][-1][0]))) <= changes and float(
+            #         f"%.{col_vo_znakov}f" % (l[i][1] - ones[-1][-1][1])) <= changes:
+            if float(f"%.{col_vo_znakov}f" % (l[i][1] - ones[-1][-1][1])) <= changes:
                 ones[-1].append(l[i])
             else:
                 ones.append([l[i]])
     print(f"Выделено нулей - {len(ones)}.")
+
+    ones_group = ones[:]
+
     ones = [sorted(i, key=lambda l: l[2])[0] for i in ones]
     print("Нули функции:")
-
     for i in ones:
         print(f"x = {'%.4f' % i[0]}   y = {'%.4f' % i[1]}   rez={'%.4f' % i[2]}")
 
+    return ones_group
+
 
 def main():
-    nu = (0.1, 0.2, 0.3, 0.4)
+    directory_name = f"result_{datetime.datetime.now().strftime('%d.%m.%Y_%H-%M-%S')}"
+    os.mkdir(directory_name)
+    os.mkdir(f"{directory_name}/raw_data")
+    os.mkdir(f"{directory_name}/group_data")
+    # exit()
+    shag = 0.001
+    # nu = (0.1, 0.2, 0.3, 0.4)
+    nu = (0.1,)
     for u in nu:
         t = datetime.datetime.now()
-        xx, yy, rez = finder(u=u)
+        xx, yy, rez = finder(shag=shag, u=u)
         t = datetime.datetime.now() - t
         print("Время поиска = ", t)
-        rezalt_file_name = file_writer_all_rezalt(xx, yy, rez, f"{u}")
+        rezalt_file_name = file_writer_raw_rezalt(xx, yy, rez, (directory_name, u))
         stat(rez)
-        group(rezalt_file_name, 0.01)
+
+        group_result_list = group(rezalt_file_name, shag)
+        file_writer_group_rezalt(group_result_list, (directory_name, u))
+
         # break
 
 
