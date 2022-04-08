@@ -20,18 +20,18 @@ def finder(u=0.1, shag=0.001, start_y=0) -> (list, list, list, list):
             print("y = ", y)
         for x in np.arange(0, 30 + shag, shag):
             # region формула один
-            # r1 = (12 * m.sinh(x) * m.cosh(x) * (m.cos(y) * m.cos(y) - m.sin(y) * m.sin(y)) - 16 * u * m.sinh(
-            #     x) * m.cosh(x) * (m.cos(y) * m.cos(y) - m.sin(y) * m.sin(y)) - 4 * x)
-            # r2 = (12 * m.cos(y) * m.sin(y) * (m.sinh(x) * m.sinh(x) + m.cosh(x) * m.cosh(x)) - 16 * u * m.cos(
-            #     y) * m.sin(y) * (m.sinh(x) * m.sinh(x) + m.cosh(x) * m.cosh(x)) - 4 * y)
+            r1 = (12 * m.sinh(x) * m.cosh(x) * (m.cos(y) * m.cos(y) - m.sin(y) * m.sin(y)) - 16 * u * m.sinh(
+                x) * m.cosh(x) * (m.cos(y) * m.cos(y) - m.sin(y) * m.sin(y)) - 4 * x)
+            r2 = (12 * m.cos(y) * m.sin(y) * (m.sinh(x) * m.sinh(x) + m.cosh(x) * m.cosh(x)) - 16 * u * m.cos(
+                y) * m.sin(y) * (m.sinh(x) * m.sinh(x) + m.cosh(x) * m.cosh(x)) - 4 * y)
             # # endregion
 
             # region формула два
-            r1 = (6 + 12 * m.sinh(x) * m.sinh(x) * m.cos(y) * m.cos(y) - 12 * m.cosh(x) * m.cosh(x) * m.sin(y) * m.sin(
-                y) - 8 * u - 16 * u * m.sinh(x) * m.sinh(x) * m.cos(y) * m.cos(y) + 16 * u * m.cosh(x) * m.cosh(
-                x) * m.sin(y) * m.sin(y) + 4 * x * x - 4 * y * y + 2 - 2 * u + u * u)
-            r2 = (24 * m.cosh(x) * m.sinh(x) * m.sin(y) * m.cos(y) - 32 * u * m.cosh(x) * m.sinh(x) * m.sin(
-                y) * m.cos(y) + 8 * x * y)
+            # r1 = (6 + 12 * m.sinh(x) * m.sinh(x) * m.cos(y) * m.cos(y) - 12 * m.cosh(x) * m.cosh(x) * m.sin(y) * m.sin(
+            #     y) - 8 * u - 16 * u * m.sinh(x) * m.sinh(x) * m.cos(y) * m.cos(y) + 16 * u * m.cosh(x) * m.cosh(
+            #     x) * m.sin(y) * m.sin(y) + 4 * x * x - 4 * y * y + 2 - 2 * u + u * u)
+            # r2 = (24 * m.cosh(x) * m.sinh(x) * m.sin(y) * m.cos(y) - 32 * u * m.cosh(x) * m.sinh(x) * m.sin(
+            #     y) * m.cos(y) + 8 * x * y)
             # endregion
 
             r = m.sqrt(r1 ** 2 + r2 ** 2)
@@ -181,21 +181,25 @@ def main():
     os.mkdir(f"{directory_name}/raw_data")
     os.mkdir(f"{directory_name}/group_data")
     # exit()
-    shag = 0.001
-    # nu = (0.1, 0.2, 0.3, 0.4)
-    nu = (0.1,)
+    shag = 0.0001
+    nu = (0.1, 0.2, 0.3, 0.4)
+    # nu = (0.2, 0.3, 0.4)
     for u in nu:
         t = datetime.datetime.now()
         xx, yy, rez = finder(shag=shag, u=u)
         t = datetime.datetime.now() - t
         print("Время поиска = ", t)
         rezalt_file_name = file_writer_raw_rezalt(xx, yy, rez, (directory_name, u))
-        stat(rez)
+        stat(rez, otc_check=True)
 
         group_result_list = group(rezalt_file_name, shag)
         file_writer_group_rezalt(group_result_list, (directory_name, u))
 
         # break
+
+
+
+        print(datetime.datetime.now().strftime('%d.%m.%Y_%H-%M-%S'))
 
 
 if __name__ == '__main__':
